@@ -1,31 +1,33 @@
 <?php
 @session_start();
-global $pdo;
-require_once('conexao.php');
+require_once("conexao.php");
 $usuario = $_POST['usuario'];
 $senha = $_POST['senha'];
+$senha_crip = sha1($senha);
 
-$query = $pdo->prepare("SELECT * FROM usuarios WHERE EMAIL = :usuario AND SENHA = :senha");
-
-$query->bindValue(":usuario", $usuario);
-$query->bindValue(":senha", $senha);
+$query = $pdo->prepare("SELECT * from usuarios where email = :email and senha_crip = :senha");
+$query->bindValue(":email", "$usuario");
+$query->bindValue(":senha", "$senha_crip");
 $query->execute();
-
 $res = $query->fetchAll(PDO::FETCH_ASSOC);
-$linhas = count($res);
+$linhas = @count($res);
 
-if ($linhas > 0) {
-    $_SESSION['$nome'] = $res[0]['NOME'];
-    $_SESSION['id'] = $res[0]['ID'];
-    $_SESSION['$nivel'] = $res[0]['NIVEL'];
-    $_SESSION['usuario'] = $usuario;
-    $_SESSION['senha'] = $senha;
-    header("Location: painel/index.php");
-} else {
-    unset($_SESSION['usuario']);
-    unset($_SESSION['senha']);
-    echo '<script>alert("Dados incorretos!");</script>';
-    echo '<script>window.location.href = "index.php";</script>';
+if($linhas > 0){
+
+    if($res[0]['ativo'] != 'Sim'){
+        echo '<script>window.alert("Seu acesso foi desativado!!")</script>';
+        echo '<script>window.location="index.php"</script>';
+    }
+
+    $_SESSION['nome'] = $res[0]['nome'];
+    $_SESSION['id'] = $res[0]['id'];
+    $_SESSION['nivel'] = $res[0]['nivel'];
+
+    echo '<script>window.location="painel"</script>';
+}else{
+    echo '<script>window.alert("Dados Incorretos!!")</script>';
+    echo '<script>window.location="index.php"</script>';
 }
+
 
 ?>
